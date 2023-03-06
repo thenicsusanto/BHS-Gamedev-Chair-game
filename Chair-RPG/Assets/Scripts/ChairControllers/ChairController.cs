@@ -4,15 +4,21 @@ using UnityEngine;
 
 public class ChairController : MonoBehaviour
 {
+    [Header("Movement")]
     [SerializeField] protected float SPD;
     [SerializeField] protected float JumpForce;
     protected Rigidbody rb;
-
     [SerializeField] protected Transform groundCheck;
     [SerializeField] protected float groundRadius = 0.2f;
     [SerializeField] protected LayerMask groundLayer;
     protected bool Grounded;
     protected bool JumpQued = false;
+    protected bool CanMove = true;
+
+    [Header("Combat")]
+    [SerializeField] protected float AttackBoost;
+    [SerializeField] protected float moveStop; //Amount of time that the player can't move for after attacking
+    [SerializeField] protected float AttackCooldown;
 
     // Start is called before the first frame update
     protected void Start()
@@ -50,14 +56,20 @@ public class ChairController : MonoBehaviour
         JumpQued = false;
     }
 
-    protected virtual void HandleWalk()
+    protected virtual Vector3 GetForce()
     {
         float xForce = Input.GetAxisRaw("Horizontal");
         float yForce = Input.GetAxisRaw("Vertical");
         
         Vector3 forceVector = new Vector3(xForce,0,yForce);
         forceVector.Normalize();
-        Vector3 force = Quaternion.Euler(0, -45, 0) * new Vector3(SPD * forceVector.x, 0, SPD * forceVector.z);
+        Vector3 force = Quaternion.Euler(0, -45, 0) * new Vector3(forceVector.x, 0, forceVector.z);
+        return force;
+    }
+
+    protected virtual void HandleWalk()
+    {
+        Vector3 force = GetForce()*SPD;
 
         rb.AddForce(new Vector3(force.x-rb.velocity.x,0,force.z-rb.velocity.z));
     }
@@ -73,26 +85,39 @@ public class ChairController : MonoBehaviour
 
         if(Grounded && JumpQued)
         {
-            print("E");
             Jump();
         }
     }
 
     protected virtual void HandleMovement()
     {
+        if(CanMove == false){return;}
         HandleWalk();
         HandleJump();
     }
 
     //Combat
+    IEnumerator pauseWalk(float amount)
+    {
+        CanMove = false;
+        yield return new WaitForSeconds(amount);
+        CanMove = true;
+    }
+
     protected virtual void HandleCombat()
     {
-        
+        if(Input.GetMouseButtonDown(0))
+        {
+            Vector3 force = GetForce()*AttackBoost;
+            StartCoroutine(pauseWalk(moveStop));
+            rb.AddForce(new Vector3(force.x,0,force.z));
+        }
     }
 
     // Update is called once per frame
     protected void Update()
     {
         HandleMovement();
+        HandleCombat();
     }
 }
