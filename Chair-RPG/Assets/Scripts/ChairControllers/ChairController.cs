@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class ChairController : MonoBehaviour
 {
+    [SerializeField] protected GameObject model;
+    protected Animator animator;
+
     [Header("Movement")]
     [SerializeField] protected float SPD;
+    protected float currSPD;
     [SerializeField] protected float JumpForce;
     protected Rigidbody rb;
     [SerializeField] protected Transform groundCheck;
@@ -19,11 +23,18 @@ public class ChairController : MonoBehaviour
     [SerializeField] protected float AttackBoost;
     [SerializeField] protected float moveStop; //Amount of time that the player can't move for after attacking
     [SerializeField] protected float AttackCooldown;
+    [SerializeField] protected float comboBreakTime;
+    [SerializeField] protected int comboLength;
+    protected float breakTimer;
+    protected bool canAttack =true;
+    protected int currComboAtk = 1;
 
     // Start is called before the first frame update
-    protected void Start()
+    protected virtual void Start()
     {
         rb = GetComponent<Rigidbody>();
+        animator = model.GetComponent<Animator>();
+        currSPD = SPD;
     }
 
     //Movement stuff
@@ -69,8 +80,13 @@ public class ChairController : MonoBehaviour
 
     protected virtual void HandleWalk()
     {
-        Vector3 force = GetForce()*SPD;
+        Vector3 force = GetForce()*currSPD;
 
+        if(force != Vector3.zero)
+        {
+            transform.LookAt(force+ transform.position); 
+        }
+            
         rb.AddForce(new Vector3(force.x-rb.velocity.x,0,force.z-rb.velocity.z));
     }
 
@@ -91,26 +107,43 @@ public class ChairController : MonoBehaviour
 
     protected virtual void HandleMovement()
     {
-        if(CanMove == false){return;}
+        if(CanMove == false){print("e");return;}
         HandleWalk();
         HandleJump();
     }
 
     //Combat
-    IEnumerator pauseWalk(float amount)
+    IEnumerator slowWalk(float amount)
     {
-        CanMove = false;
+        currSPD = SPD/4;
         yield return new WaitForSeconds(amount);
-        CanMove = true;
+        currSPD = SPD;
+    }
+
+    IEnumerator handleAttackCooldown(float amount)
+    {
+        canAttack = false;
+        yield return new WaitForSeconds(amount);
+        canAttack = true;
     }
 
     protected virtual void HandleCombat()
     {
-        if(Input.GetMouseButtonDown(0))
+        breakTimer -= Time.deltaTime;
+        if(breakTimer <= 0 || currComboAtk > comboLength)
         {
+            currComboAtk = 1;
+        }
+        if(Input.GetMouseButtonDown(0) && canAttack)
+        {
+            breakTimer = comboBreakTime;
             Vector3 force = GetForce()*AttackBoost;
-            StartCoroutine(pauseWalk(moveStop));
-            rb.AddForce(new Vector3(force.x,0,force.z));
+            StartCoroutine(slowWalk(moveStop));
+            StartCoroutine(handleAttackCooldown(AttackCooldown));
+            rb.AddForce(new Vector3(force.x,0,force.z),ForceMode.VelocityChange);
+            print(currComboAtk.ToString());
+            animator.SetTrigger("Attack"+currComboAtk.ToString());
+            currComboAtk++;
         }
     }
 
