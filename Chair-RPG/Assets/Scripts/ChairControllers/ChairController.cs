@@ -81,17 +81,9 @@ public class ChairController : MonoBehaviour
     protected virtual void HandleWalk()
     {
         Vector3 force = GetForce()*currSPD;
-        if(force != Vector3.zero)
+        if(force != Vector3.zero && canAttack == true)
         {
-            animator.SetBool("Walking",true);
-            if(canAttack == true)
-            {
-                transform.LookAt(force+ transform.position); 
-            }
-        }
-        else
-        {
-            animator.SetBool("Walking",false);
+            transform.LookAt(force+ transform.position); 
         }
             
         rb.AddForce(new Vector3(force.x-rb.velocity.x,0,force.z-rb.velocity.z));
@@ -117,6 +109,19 @@ public class ChairController : MonoBehaviour
         if(CanMove == false){print("e");return;}
         HandleWalk();
         HandleJump();
+    }
+
+    protected virtual void HandleWalkAnim()
+    {
+        Vector3 force = GetForce();
+        if(force != Vector3.zero && Grounded)
+        {
+            animator.SetBool("Walking",true);
+        }
+        else
+        {
+            animator.SetBool("Walking",false);
+        }
     }
 
     //Combat
@@ -157,6 +162,7 @@ public class ChairController : MonoBehaviour
     // Update is called once per frame
     protected void Update()
     {
+        HandleWalkAnim();
         HandleMovement();
         HandleCombat();
     }
