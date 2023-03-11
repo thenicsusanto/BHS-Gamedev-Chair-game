@@ -517,9 +517,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   AttackBoost: 5
-  moveStop: 0.5
-  AttackCooldown: 0.5
-  comboBreakTime: 0.9
+  moveStop: 0.4
+  AttackCooldown: 0.4
+  comboBreakTime: 0.7
   comboLength: 3
 --- !u!1 &1938252203
 GameObject:

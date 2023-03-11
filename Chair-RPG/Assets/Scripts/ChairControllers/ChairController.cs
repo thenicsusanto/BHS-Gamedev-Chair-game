@@ -81,10 +81,17 @@ public class ChairController : MonoBehaviour
     protected virtual void HandleWalk()
     {
         Vector3 force = GetForce()*currSPD;
-
         if(force != Vector3.zero)
         {
-            transform.LookAt(force+ transform.position); 
+            animator.SetBool("Walking",true);
+            if(canAttack == true)
+            {
+                transform.LookAt(force+ transform.position); 
+            }
+        }
+        else
+        {
+            animator.SetBool("Walking",false);
         }
             
         rb.AddForce(new Vector3(force.x-rb.velocity.x,0,force.z-rb.velocity.z));
