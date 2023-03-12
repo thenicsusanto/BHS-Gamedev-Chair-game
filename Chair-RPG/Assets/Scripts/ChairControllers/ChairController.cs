@@ -71,7 +71,7 @@ public class ChairController : MonoBehaviour
     {
         float xForce = Input.GetAxisRaw("Horizontal");
         float yForce = Input.GetAxisRaw("Vertical");
-        
+        print(xForce.ToString()+yForce.ToString());
         Vector3 forceVector = new Vector3(xForce,0,yForce);
         forceVector.Normalize();
         Vector3 force = Quaternion.Euler(0, -45, 0) * new Vector3(forceVector.x, 0, forceVector.z);
@@ -85,7 +85,7 @@ public class ChairController : MonoBehaviour
         {
             transform.LookAt(force+ transform.position); 
         }
-            
+        print(force);    
         rb.AddForce(new Vector3(force.x-rb.velocity.x,0,force.z-rb.velocity.z));
     }
 
@@ -125,18 +125,30 @@ public class ChairController : MonoBehaviour
     }
 
     //Combat
-    IEnumerator slowWalk(float amount)
+    protected virtual IEnumerator slowWalk(float amount)
     {
         currSPD = SPD/4;
         yield return new WaitForSeconds(amount);
         currSPD = SPD;
     }
 
-    IEnumerator handleAttackCooldown(float amount)
+    protected virtual IEnumerator handleAttackCooldown(float amount)
     {
         canAttack = false;
         yield return new WaitForSeconds(amount);
         canAttack = true;
+    }
+
+    protected virtual void Attack()
+    {
+        breakTimer = comboBreakTime;
+        Vector3 force = GetForce()*AttackBoost;
+        StartCoroutine(slowWalk(moveStop));
+        StartCoroutine(handleAttackCooldown(AttackCooldown));
+        rb.AddForce(new Vector3(force.x,0,force.z),ForceMode.VelocityChange);
+        print(currComboAtk.ToString());
+        animator.SetTrigger("Attack"+currComboAtk.ToString());
+        currComboAtk++;
     }
 
     protected virtual void HandleCombat()
@@ -148,14 +160,7 @@ public class ChairController : MonoBehaviour
         }
         if(Input.GetMouseButtonDown(0) && canAttack)
         {
-            breakTimer = comboBreakTime;
-            Vector3 force = GetForce()*AttackBoost;
-            StartCoroutine(slowWalk(moveStop));
-            StartCoroutine(handleAttackCooldown(AttackCooldown));
-            rb.AddForce(new Vector3(force.x,0,force.z),ForceMode.VelocityChange);
-            print(currComboAtk.ToString());
-            animator.SetTrigger("Attack"+currComboAtk.ToString());
-            currComboAtk++;
+            Attack();
         }
     }
 
