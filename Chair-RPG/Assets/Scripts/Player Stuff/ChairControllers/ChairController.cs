@@ -2,16 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ChairController : MonoBehaviour
+public class ChairController : CombatEntity
 {
-    [SerializeField] protected GameObject model;
-    protected Animator animator;
-
     [Header("Movement")]
     [SerializeField] protected float SPD;
     protected float currSPD;
     [SerializeField] protected float JumpForce;
-    protected Rigidbody rb;
     [SerializeField] protected Transform groundCheck;
     [SerializeField] protected float groundRadius = 0.2f;
     [SerializeField] protected LayerMask groundLayer;
@@ -22,18 +18,15 @@ public class ChairController : MonoBehaviour
     [Header("Combat")]
     [SerializeField] protected float AttackBoost;
     [SerializeField] protected float moveStop; //Amount of time that the player can't move for after attacking
-    [SerializeField] protected float AttackCooldown;
     [SerializeField] protected float comboBreakTime;
     [SerializeField] protected int comboLength;
     protected float breakTimer;
-    protected bool canAttack =true;
     protected int currComboAtk = 1;
 
     // Start is called before the first frame update
-    protected virtual void Start()
+    protected override void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        animator = model.GetComponent<Animator>();
+        base.Start();
         currSPD = SPD;
     }
 
@@ -139,14 +132,14 @@ public class ChairController : MonoBehaviour
         canAttack = true;
     }
 
-    protected virtual void Attack()
+    protected override void Attack()
     {
         breakTimer = comboBreakTime;
         Vector3 force = GetForce()*AttackBoost;
         StartCoroutine(slowWalk(moveStop));
         StartCoroutine(handleAttackCooldown(AttackCooldown));
         rb.AddForce(new Vector3(force.x,0,force.z),ForceMode.VelocityChange);
-        print(currComboAtk.ToString());
+        //print(currComboAtk.ToString());
         animator.SetTrigger("Attack"+currComboAtk.ToString());
         currComboAtk++;
     }
